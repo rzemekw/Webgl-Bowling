@@ -66,22 +66,15 @@ export default class WebglModel {
             glMatrix.mat4.translate(this.worldMatrix, this.worldMatrix, this.translationVector);
         }
 
-        // if(this.xRotationAngle !== undefined) {
-        //     const q = glMatrix.quat.create();
-        //     const rotM = glMatrix.mat4.create();
-        //     glMatrix.quat.fromEuler(q, this.xRotationAngle, this.yRotationAngle, this.zRotationAngle);
-        //     glMatrix.mat4.fromQuat(rotM, q);
-        //     glMatrix.mat4.multiply(this.worldMatrix, this.worldMatrix, rotM);
-        // }
 
+        if (this.zRotationAngle) {
+            glMatrix.mat4.rotateZ(this.worldMatrix, this.worldMatrix, this.zRotationAngle);
+        }
         if (this.xRotationAngle) {
             glMatrix.mat4.rotateX(this.worldMatrix, this.worldMatrix, this.xRotationAngle);
         }
         if (this.yRotationAngle) {
             glMatrix.mat4.rotateY(this.worldMatrix, this.worldMatrix, this.yRotationAngle);
-        }
-        if (this.zRotationAngle) {
-            glMatrix.mat4.rotateZ(this.worldMatrix, this.worldMatrix, this.zRotationAngle);
         }
     }
 }

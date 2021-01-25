@@ -70,8 +70,16 @@ export default class BowlingBall {
         pos[2] += this.vz * interval;
 
         // this.model.xRotationAngle += 0.03
-        this.model.xRotationAngle -= this.vy * interval / bowlingBallRadius;
-        this.model.yRotationAngle += this.vx * interval / bowlingBallRadius;
+        this.model.xRotationAngle -= Math.sqrt(this.vy*this.vy + this.vx * this.vx) * interval / bowlingBallRadius;
+        if (this.vy != 0) {
+            this.model.zRotationAngle = -Math.atan(this.vx / this.vy);
+            if(this.vy < 0) {
+                this.model.zRotationAngle += Math.PI;
+            }
+        }
+        else {
+            this.model.zRotationAngle = this.vx > 0 ? Math.PI / 2 : -Math.PI / 2;
+        }
 
         this.model.applyTransform();
     }
