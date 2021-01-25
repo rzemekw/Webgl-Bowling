@@ -15,15 +15,16 @@ export default class MirrorModel {
             (corner1[1] + corner2[1] + corner3[1] + corner4[1]) / 4,
             (corner1[2] + corner2[2] + corner3[2] + corner4[2]) / 4,
         ]
+        this.n = 2;
 
         this.worldMatrix = glMatrix.mat4.create();
 
         const vertices = [].concat.apply([], [corner1, corner2, corner3, corner4]);
+        console.log(vertices)
         const indices = [0, 1, 2, 0, 2, 3];
         const a = [corner1[0] - corner2[0], corner1[1] - corner2[1], corner1[2] - corner2[2]];
         const b = [corner3[0] - corner2[0], corner3[1] - corner2[1], corner3[2] - corner2[2]];
         let normal = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-        console.log(a, b);
         glMatrix.vec3.normalize(normal, normal);
         if (normalInverted) {
             normal = normal.map(x => -x);
@@ -51,15 +52,10 @@ export default class MirrorModel {
     initBuffers(vertices, indices, normals) {
         this.vbo = this.gl.createBuffer();
         this.ibo = this.gl.createBuffer();
-        this.nbo = this.gl.createBuffer();
-        this.tbo = this.gl.createBuffer();
         this.n = indices.length;
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vbo);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.nbo);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.ibo);
         this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.gl.STATIC_DRAW);
@@ -70,9 +66,11 @@ export default class MirrorModel {
     updateTexture() {
         const camera = this.globalScene.camera;
         const nPos = this.getNewPos(camera.position[0], camera.position[1], camera.position[2]);
-        // const nLookAt = this.getNewPos(camera.lookAt[0], camera.lookAt[1], camera.lookAt[2]);
         this.scene.camera = new Camera(nPos, this.mid, camera.up);
-        this.updateTbo(this.scene.camera.getViewMatrix());
+
+        this.projMatrix = this.scene.projMatrix;
+        this.viewMatrix = this.scene.camera.getViewMatrix();
+
         this.scene.render();
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
@@ -95,42 +93,6 @@ export default class MirrorModel {
 
     updated() {
         return;
-    }
-
-    updateTbo(viewMatrix) {
-        const gm = glMatrix.mat4.create();
-        glMatrix.mat4.multiply(gm, this.scene.projMatrix, viewMatrix);
-        const c1 = glMatrix.vec4.fromValues(this.corner1[0], this.corner1[1], this.corner1[2], 1);
-        const c2 = glMatrix.vec4.fromValues(this.corner2[0], this.corner2[1], this.corner2[2], 1);
-        const c3 = glMatrix.vec4.fromValues(this.corner3[0], this.corner3[1], this.corner3[2], 1);
-        const c4 = glMatrix.vec4.fromValues(this.corner4[0], this.corner4[1], this.corner4[2], 1);
-
-        glMatrix.vec4.transformMat4(c1, c1, gm);
-        glMatrix.vec4.transformMat4(c2, c2, gm);
-        glMatrix.vec4.transformMat4(c3, c3, gm);
-        glMatrix.vec4.transformMat4(c4, c4, gm);
-
-        glMatrix.vec4.scale(c1, c1, 1 / c1[3]);
-        glMatrix.vec4.scale(c2, c2, 1 / c2[3]);
-        glMatrix.vec4.scale(c3, c3, 1 / c3[3]);
-        glMatrix.vec4.scale(c4, c4, 1 / c4[3]);
-
-        // const texCoords = [c1[0] /2 + 0.5, c1[1] /2 + 0.5, c2[0] /2 + 0.5, c2[1] /2 + 0.5, c3[0] /2 + 0.5, c3[1] /2 + 0.5, c4[0] /2 + 0.5, c4[1] /2 + 0.5];
-        const texCoords = [c1[0] /2 + 0.5, c1[1] /2 + 0.5, c2[0] /2 + 0.5, c2[1] /2 + 0.5, c3[0] /2 + 0.5, c3[1] /2 + 0.5, c4[0] /2 + 0.5, c4[1] /2 + 0.5];
-
-        // const texCoords = [
-        //     0.35,
-        //     0.35,
-        //     0.35,
-        //     0.7,
-        //     0.5,
-        //     0.4,
-        //     0.5,
-        //     0.5,
-        // ]
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.tbo);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texCoords), this.gl.STATIC_DRAW);
     }
 
     getNewPos(x, y, z) {

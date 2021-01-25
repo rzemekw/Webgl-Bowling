@@ -8,7 +8,7 @@ import {
     bowlingBallInitialTranslation,
     mirrorCorners,
 } from './consts/modelConsts.js'
-import { vsShaderPath, fsShaderPath } from './consts/shaderConsts.js'
+import { vsShaderPath, fsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath } from './consts/shaderConsts.js'
 import ModelsFactory from './modelsFactory.js';
 import WebglProgramFactory from './webglProgramFactory.js';
 import WebglScene from './webglScene.js';
@@ -28,6 +28,8 @@ export default class Game {
 
             promises.push(loadTextResource(vsShaderPath));
             promises.push(loadTextResource(fsShaderPath));
+            promises.push(loadTextResource(mirrorVsShaderPath));
+            promises.push(loadTextResource(mirrorFsShaderPath));
             promises.push(loadJSONResource(bowlingHallModelPath));
             promises.push(Promise.all(bowlingHallTexturesPaths.map(p => loadImage(p))));
             promises.push(loadJSONResource(bowlingPinModelPath));
@@ -37,12 +39,13 @@ export default class Game {
 
             const [
                 vsShaderText, fsShaderText,
+                mirrorVsShaderText, mirrorFsShaderText,
                 bowlingHallModelsObj, bowlingHallTextures,
                 bowlingPinModelObj, bowlingPinTexture,
                 bowlingBallModelObj, bowlingBallTexture
             ] = await Promise.all(promises);
 
-            this._initWebGL(vsShaderText, fsShaderText)
+            this._initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText )
 
             const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures);
             const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
@@ -50,14 +53,11 @@ export default class Game {
             const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
                 bowlingBallInitialRotation, bowlingBallInitialTranslation);
 
-            console.log(bowlingBallModelObj)
-
-            this.scene = new WebglScene(this.gl, this.program, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel));
+            this.scene = new WebglScene(this.gl, this.program, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel), this.mirrorProgram);
             this.scene.load();
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3], false, this.scene, vsShaderText, fsShaderText);
             this.scene.addMirror(mirrorModel);
-            this.scene.models.push(mirrorModel);
 
             this.scene.start();
 
@@ -71,7 +71,7 @@ export default class Game {
         }
     }
 
-    _initWebGL(vsShaderText, fsShaderText) {
+    _initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText) {
         this.gl = this.canvas.getContext('webgl2');
         const gl = this.gl;
         if (!this.gl) {
@@ -79,6 +79,7 @@ export default class Game {
         }
 
         this.program = WebglProgramFactory.createProgram(this.gl, vsShaderText, fsShaderText)
+        this.mirrorProgram = WebglProgramFactory.createProgram(this.gl, mirrorVsShaderText, mirrorFsShaderText)
     }
 
     _getClickCoords(clientX, clientY) {

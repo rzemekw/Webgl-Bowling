@@ -3,10 +3,11 @@ import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp 
 import { ambientLight, sunLightDirection, sunLightIntesity } from './consts/lightConsts.js';
 
 export default class WebglScene {
-    constructor(gl, program, models) {
+    constructor(gl, program, models, mirrorProgram) {
         this.gl = gl;
         this.program = program;
         this.models = models;
+        this.mirrorProgram = mirrorProgram;
     }
 
     projMatrix = glMatrix.mat4.create();
@@ -21,14 +22,14 @@ export default class WebglScene {
 
     load() {
         this.program.uniforms = {
-            mProj: this.gl.getUniformLocation(this.program, 'mProj'),//
-            mView: this.gl.getUniformLocation(this.program, 'mView'),//
+            mProj: this.gl.getUniformLocation(this.program, 'mProj'),
+            mView: this.gl.getUniformLocation(this.program, 'mView'),
             mWorld: this.gl.getUniformLocation(this.program, 'mWorld'),
 
-            ambientUniformLocation: this.gl.getUniformLocation(this.program, 'ambientLightIntensity'),//
-            sunlightDirUniformLocation: this.gl.getUniformLocation(this.program, 'sun.direction'),//
-            sunlightIntUniformLocation: this.gl.getUniformLocation(this.program, 'sun.color'),//
-            cameraPositionLocation: this.gl.getUniformLocation(this.program, 'cameraPosition'),//
+            ambientUniformLocation: this.gl.getUniformLocation(this.program, 'ambientLightIntensity'),
+            sunlightDirUniformLocation: this.gl.getUniformLocation(this.program, 'sun.direction'),
+            sunlightIntUniformLocation: this.gl.getUniformLocation(this.program, 'sun.color'),
+            cameraPositionLocation: this.gl.getUniformLocation(this.program, 'cameraPosition'),
         };
 
         this.program.attribs = {
@@ -44,6 +45,22 @@ export default class WebglScene {
             0.1,
             1000
         );
+
+        if(!this.mirrorProgram) {
+            return;
+        }
+
+        this.mirrorProgram.uniforms = {
+            mProj: this.gl.getUniformLocation(this.mirrorProgram, 'mProj'),
+            mView: this.gl.getUniformLocation(this.mirrorProgram, 'mView'),
+            mWorld: this.gl.getUniformLocation(this.mirrorProgram, 'mWorld'),
+            mirrorMView: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMView'),
+            mirrorMProj: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMProj'),
+        }
+
+        this.mirrorProgram.attribs = {
+            vPos: this.gl.getAttribLocation(this.program, 'vertPosition'),
+        };
     }
 
     render() {
@@ -58,6 +75,8 @@ export default class WebglScene {
         this.gl.enable(this.gl.CULL_FACE);
         this.gl.frontFace(this.gl.CCW);
 
+        this.renderMirrors();
+
         this.gl.useProgram(this.program);
         this.gl.uniformMatrix4fv(this.program.uniforms.mProj, this.gl.FALSE, this.projMatrix);
         this.gl.uniformMatrix4fv(this.program.uniforms.mView, this.gl.FALSE, this.camera.getViewMatrix());
@@ -66,8 +85,6 @@ export default class WebglScene {
         this.gl.uniform3f(this.program.uniforms.sunlightDirUniformLocation, ...sunLightDirection);
         this.gl.uniform3f(this.program.uniforms.sunlightIntUniformLocation, ...sunLightIntesity);
         this.gl.uniform3f(this.program.uniforms.cameraPositionLocation, ...this.camera.position);
-
-        let i = 0;
 
         this.models.forEach(m => {
             this.gl.uniformMatrix4fv(this.program.uniforms.mWorld, this.gl.FALSE, m.worldMatrix);
@@ -101,12 +118,46 @@ export default class WebglScene {
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, m.ibo);
 
             this.gl.bindTexture(this.gl.TEXTURE_2D, m.getTexture());
-            this.gl.activeTexture(this.gl.TEXTURE0 + i);
+            this.gl.activeTexture(this.gl.TEXTURE0);
 
             this.gl.drawElements(this.gl.TRIANGLES, m.n, this.gl.UNSIGNED_SHORT, 0);
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
         });
     };
+
+    renderMirrors() {
+        if(!this.mirrorProgram) {
+            return;
+        }
+        this.gl.useProgram(this.mirrorProgram);
+        this.gl.uniformMatrix4fv(this.mirrorProgram.uniforms.mProj, this.gl.FALSE, this.projMatrix);
+        this.gl.uniformMatrix4fv(this.mirrorProgram.uniforms.mView, this.gl.FALSE, this.camera.getViewMatrix());
+
+        this.mirrors.forEach(m => {
+            this.gl.uniformMatrix4fv(this.mirrorProgram.uniforms.mWorld, this.gl.FALSE, m.worldMatrix);
+            this.gl.uniformMatrix4fv(this.mirrorProgram.uniforms.mirrorMProj, this.gl.FALSE, m.projMatrix);
+            this.gl.uniformMatrix4fv(this.mirrorProgram.uniforms.mirrorMView, this.gl.FALSE, m.viewMatrix);
+
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.vbo);
+            this.gl.vertexAttribPointer(
+                this.mirrorProgram.attribs.vPos,
+                3, this.gl.FLOAT, this.gl.FALSE,
+                0, 0
+            );
+            this.gl.enableVertexAttribArray(this.mirrorProgram.attribs.vPos);
+
+
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, m.ibo);
+
+            this.gl.bindTexture(this.gl.TEXTURE_2D, m.getTexture());
+            this.gl.activeTexture(this.gl.TEXTURE0);
+
+            this.gl.drawElements(this.gl.TRIANGLES, m.n, this.gl.UNSIGNED_SHORT, 0);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
+        });
+    }
 
     start() {
         let prevFrame = performance.now();

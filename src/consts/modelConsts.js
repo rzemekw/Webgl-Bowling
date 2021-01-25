@@ -27,7 +27,8 @@ export const bowlingBallTexturePath = bowlingBallImg
 // export const bowlingBallInitialRotation = [-90, 0, 0];
 // export const bowlingBallInitialRotation = [-30, -45, 0];
 export const bowlingBallInitialRotation = [-30 * Math.PI / 180, -45 * Math.PI / 180, 0];
-export const bowlingBallInitialTranslation = new Float32Array([0, 18, 0]);
+// export const bowlingBallInitialTranslation = new Float32Array([0, 18, 0]);
+export const bowlingBallInitialTranslation = new Float32Array([0, 18, -0.6]);
 export const bowlingBallRadius = 0.406;
 
 
@@ -65,9 +66,9 @@ for (let i = 0; i < 4; i++) {
 }
 
 export const mirrorCorners = [
-    [-6.02, 18, -0.75],
-    [-6.02, 18, 1.5],
-    [-6.02, 0, 1.5],
-    [-6.02, 0, -0.75],
+    [-6.02, 19, -0.75],
+    [-6.02, 19, 1.5],
+    [-6.02, -10, 1.5],
+    [-6.02, -10, -0.75],
 ]
 
