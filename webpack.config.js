@@ -1,4 +1,3 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
@@ -30,19 +29,11 @@ module.exports = {
         ]
     },
     plugins: [
-        new HtmlWebpackPlugin({
-            template: 'public/index.html'
-        }),
         new CopyPlugin({
             patterns: [
                 {
                     from: "public/**/*",
                     to: "[name].[ext]",
-                    globOptions: {
-                        dot: true,
-                        gitignore: true,
-                        ignore: ["**/index.html"],
-                    },
                 }
             ]
         }),
