@@ -29,6 +29,8 @@ export default class WebglScene {
             ambientUniformLocation: this.gl.getUniformLocation(this.program, 'ambientLightIntensity'),
             sunlightDirUniformLocation: this.gl.getUniformLocation(this.program, 'sun.direction'),
             sunlightIntUniformLocation: this.gl.getUniformLocation(this.program, 'sun.color'),
+            materialKd: this.gl.getUniformLocation(this.program, 'material.kd'),
+            materialShininess: this.gl.getUniformLocation(this.program, 'material.shininess'),
             cameraPositionLocation: this.gl.getUniformLocation(this.program, 'cameraPosition'),
         };
 
@@ -46,7 +48,7 @@ export default class WebglScene {
             1000
         );
 
-        if(!this.mirrorProgram) {
+        if (!this.mirrorProgram) {
             return;
         }
 
@@ -89,6 +91,9 @@ export default class WebglScene {
         this.models.forEach(m => {
             this.gl.uniformMatrix4fv(this.program.uniforms.mWorld, this.gl.FALSE, m.worldMatrix);
 
+            this.gl.uniform1f(this.program.uniforms.materialKd, m.material.kd);
+            this.gl.uniform1f(this.program.uniforms.materialShininess, m.material.shininess);
+
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.vbo);
             this.gl.vertexAttribPointer(
                 this.program.attribs.vPos,
@@ -126,7 +131,7 @@ export default class WebglScene {
     };
 
     renderMirrors() {
-        if(!this.mirrorProgram) {
+        if (!this.mirrorProgram) {
             return;
         }
         this.gl.useProgram(this.mirrorProgram);
@@ -193,7 +198,7 @@ export default class WebglScene {
         glMatrix.vec3.transformMat4(vec1, vec1, invMat);
         glMatrix.vec3.transformMat4(vec2, vec2, invMat);
 
-        return {start: vec1, end: vec2};
+        return { start: vec1, end: vec2 };
     }
 
     _update(interval) {

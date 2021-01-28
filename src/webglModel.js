@@ -1,10 +1,11 @@
 export default class WebglModel {
-    constructor(vertices, indices, normals, texCoords, texture, gl, rotationAngles, translationVector) {
+    constructor(vertices, indices, normals, texCoords, texture, gl, rotationAngles, translationVector, material) {
         this.vbo = gl.createBuffer();
         this.ibo = gl.createBuffer();
         this.nbo = gl.createBuffer();
         this.tbo = gl.createBuffer();
         this.n = indices.length;
+        this.material = material;
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);

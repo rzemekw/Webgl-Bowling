@@ -7,6 +7,9 @@ import {
     bowlingBallInitialRotation,
     bowlingBallInitialTranslation,
     mirrorCorners,
+    bowlingHallMaterials,
+    bowlingBallMaterial,
+    bowlingPinMaterial
 } from './consts/modelConsts.js'
 import { vsShaderPath, fsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath } from './consts/shaderConsts.js'
 import ModelsFactory from './modelsFactory.js';
@@ -47,16 +50,17 @@ export default class Game {
 
             this._initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText )
 
-            const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures);
+            const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures, bowlingHallMaterials);
             const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
-                ModelsFactory.createModels(this.gl, bowlingPinModelObj, [bowlingPinTexture], undefined, t)));
+                ModelsFactory.createModels(this.gl, bowlingPinModelObj, [bowlingPinTexture], [bowlingPinMaterial], undefined, t)));
             const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
-                bowlingBallInitialRotation, bowlingBallInitialTranslation);
+                [bowlingBallMaterial], bowlingBallInitialRotation, bowlingBallInitialTranslation);
 
             this.scene = new WebglScene(this.gl, this.program, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel), this.mirrorProgram);
             this.scene.load();
 
-            const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3], false, this.scene, vsShaderText, fsShaderText);
+            const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
+                false, this.scene, vsShaderText, fsShaderText);
             this.scene.addMirror(mirrorModel);
 
             this.scene.start();

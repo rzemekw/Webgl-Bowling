@@ -1,14 +1,14 @@
 import WebglModel from "./webglModel.js";
 
 export default class ModelsFactory {
-    static createModels(gl, modelsObj, textures, rotationAngles, translationVector, back) {
+    static createModels(gl, modelsObj, textures, materials, rotationAngles, translationVector, back) {
         const models = [];
 
         for (let i = 0; i < modelsObj.meshes.length; i++) {
             const mesh = modelsObj.meshes[i];
 
             const model = new WebglModel(mesh.vertices, [].concat.apply([], mesh.faces), mesh.normals, mesh.texturecoords[0], textures[i], gl,
-                rotationAngles, translationVector);
+                rotationAngles, translationVector, materials[i]);
             models.push(model);
 
             if(back) {
