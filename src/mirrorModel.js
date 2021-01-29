@@ -1,10 +1,8 @@
 import Camera from "./camera.js";
-import { cameraFov } from "./consts/cameraConsts.js";
-import WebglProgramFactory from "./webglProgramFactory.js";
 import WebglScene from "./webglScene.js";
 
 export default class MirrorModel {
-    constructor(corner1, corner2, corner3, corner4, normalInverted, globalScene, vsShaderText, fsShaderText) {
+    constructor(corner1, corner2, corner3, corner4, normalInverted, globalScene) {
         this.globalScene = globalScene;
         this.corner1 = corner1;
         this.corner2 = corner2;
@@ -34,18 +32,18 @@ export default class MirrorModel {
         this.normal = normal;
         this.planeD = -(normal[0] * corner1[0] + normal[1] * corner1[1] + normal[2] * corner1[2]);
 
-        this.initScene(vsShaderText, fsShaderText);
+        this.initScene();
         this.initBuffers(vertices, indices, normals);
 
         console.log(this.scene);
         console.log(this.globalScene);
     }
 
-    initScene(vsShaderText, fsShaderText) {
+    initScene() {
         this.gl = this.globalScene.gl;
         this.canvas = this.gl.canvas;
-        this.program = WebglProgramFactory.createProgram(this.gl, vsShaderText, fsShaderText);
-        this.scene = new WebglScene(this.gl, this.program, [...this.globalScene.models]);
+        this.scene = new WebglScene(this.gl, this.globalScene.phongProgram, [...this.globalScene.models],
+            this.globalScene.mirrorProgram, this.globalScene.staticProgram);
         this.scene.load();
     }
 
@@ -71,6 +69,7 @@ export default class MirrorModel {
         this.projMatrix = this.scene.projMatrix;
         this.viewMatrix = this.scene.camera.getViewMatrix();
 
+        this.scene.mode = this.globalScene.mode;
         this.scene.render();
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);

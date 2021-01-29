@@ -3,11 +3,13 @@ import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp 
 import { ambientLight, sunLightDirection, sunLightIntesity } from './consts/lightConsts.js';
 
 export default class WebglScene {
-    constructor(gl, program, models, mirrorProgram) {
+    constructor(gl, phongProgram, models, mirrorProgram, staticProgram) {
         this.gl = gl;
-        this.program = program;
+        this.phongProgram = phongProgram;
         this.models = models;
         this.mirrorProgram = mirrorProgram;
+        this.staticProgram = staticProgram;
+        this.currentProgram = phongProgram;
     }
 
     projMatrix = glMatrix.mat4.create();
@@ -20,24 +22,27 @@ export default class WebglScene {
         cameraInitialUp
     );
 
-    load() {
-        this.program.uniforms = {
-            mProj: this.gl.getUniformLocation(this.program, 'mProj'),
-            mView: this.gl.getUniformLocation(this.program, 'mView'),
-            mWorld: this.gl.getUniformLocation(this.program, 'mWorld'),
+    mode = 'PHONG'
 
-            ambientUniformLocation: this.gl.getUniformLocation(this.program, 'ambientLightIntensity'),
-            sunlightDirUniformLocation: this.gl.getUniformLocation(this.program, 'sun.direction'),
-            sunlightIntUniformLocation: this.gl.getUniformLocation(this.program, 'sun.color'),
-            materialKd: this.gl.getUniformLocation(this.program, 'material.kd'),
-            materialShininess: this.gl.getUniformLocation(this.program, 'material.shininess'),
-            cameraPositionLocation: this.gl.getUniformLocation(this.program, 'cameraPosition'),
+
+    load() {
+        this.phongProgram.uniforms = {
+            mProj: this.gl.getUniformLocation(this.phongProgram, 'mProj'),
+            mView: this.gl.getUniformLocation(this.phongProgram, 'mView'),
+            mWorld: this.gl.getUniformLocation(this.phongProgram, 'mWorld'),
+
+            ambientUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'ambientLightIntensity'),
+            sunlightDirUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'sun.direction'),
+            sunlightIntUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'sun.color'),
+            materialKd: this.gl.getUniformLocation(this.phongProgram, 'material.kd'),
+            materialShininess: this.gl.getUniformLocation(this.phongProgram, 'material.shininess'),
+            cameraPositionLocation: this.gl.getUniformLocation(this.phongProgram, 'cameraPosition'),
         };
 
-        this.program.attribs = {
-            vPos: this.gl.getAttribLocation(this.program, 'vertPosition'),
-            vNorm: this.gl.getAttribLocation(this.program, 'vertNormal'),
-            vTex: this.gl.getAttribLocation(this.program, 'vertTexCoord'),
+        this.phongProgram.attribs = {
+            vPos: this.gl.getAttribLocation(this.phongProgram, 'vertPosition'),
+            vNorm: this.gl.getAttribLocation(this.phongProgram, 'vertNormal'),
+            vTex: this.gl.getAttribLocation(this.phongProgram, 'vertTexCoord'),
         };
 
         glMatrix.mat4.perspective(
@@ -48,25 +53,130 @@ export default class WebglScene {
             1000
         );
 
-        if (!this.mirrorProgram) {
-            return;
+        if (this.mirrorProgram) {
+            this.mirrorProgram.uniforms = {
+                mProj: this.gl.getUniformLocation(this.mirrorProgram, 'mProj'),
+                mView: this.gl.getUniformLocation(this.mirrorProgram, 'mView'),
+                mWorld: this.gl.getUniformLocation(this.mirrorProgram, 'mWorld'),
+                mirrorMView: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMView'),
+                mirrorMProj: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMProj'),
+            }
+
+            this.mirrorProgram.attribs = {
+                vPos: this.gl.getAttribLocation(this.phongProgram, 'vertPosition'),
+            };
         }
 
-        this.mirrorProgram.uniforms = {
-            mProj: this.gl.getUniformLocation(this.mirrorProgram, 'mProj'),
-            mView: this.gl.getUniformLocation(this.mirrorProgram, 'mView'),
-            mWorld: this.gl.getUniformLocation(this.mirrorProgram, 'mWorld'),
-            mirrorMView: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMView'),
-            mirrorMProj: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMProj'),
+        if (this.staticProgram) {
+            this.staticProgram.uniforms = {
+                mProj: this.gl.getUniformLocation(this.staticProgram, 'mProj'),
+                mView: this.gl.getUniformLocation(this.staticProgram, 'mView'),
+                mWorld: this.gl.getUniformLocation(this.staticProgram, 'mWorld'),
+            };
+
+            this.staticProgram.attribs = {
+                vPos: this.gl.getAttribLocation(this.staticProgram, 'vertPosition'),
+                vNorm: this.gl.getAttribLocation(this.staticProgram, 'vertNormal'),
+                vTex: this.gl.getAttribLocation(this.staticProgram, 'vertTexCoord'),
+            };
         }
 
-        this.mirrorProgram.attribs = {
-            vPos: this.gl.getAttribLocation(this.program, 'vertPosition'),
-        };
+    }
+
+    _useProgram() {
+        switch(this.mode) {
+            case 'PHONG':
+                this.currentProgram = this.phongProgram;
+                break;
+            case 'STATIC':
+                this.currentProgram = this.staticProgram;
+                break;
+            default:
+                throw new Error('wrong mode')
+        }
+
+        this.gl.useProgram(this.currentProgram);
+    }
+
+    _bindModelStatic(m) {
+        this.gl.uniformMatrix4fv(this.currentProgram.uniforms.mWorld, this.gl.FALSE, m.worldMatrix);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.vbo);
+        this.gl.vertexAttribPointer(
+            this.currentProgram.attribs.vPos,
+            3, this.gl.FLOAT, this.gl.FALSE,
+            0, 0
+        );
+        this.gl.enableVertexAttribArray(this.currentProgram.attribs.vPos);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.tbo);
+        this.gl.vertexAttribPointer(
+            this.currentProgram.attribs.vTex,
+            2, this.gl.FLOAT, this.gl.FALSE,
+            0, 0
+        );
+        this.gl.enableVertexAttribArray(this.currentProgram.attribs.vTex);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, m.ibo);
+
+        this.gl.bindTexture(this.gl.TEXTURE_2D, m.getTexture());
+        this.gl.activeTexture(this.gl.TEXTURE0);
+    }
+
+    _bindModelPhong(m) {
+        this._bindModelStatic(m);
+
+        this.gl.uniform1f(this.currentProgram.uniforms.materialKd, m.material.kd);
+        this.gl.uniform1f(this.currentProgram.uniforms.materialShininess, m.material.shininess);
+
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.nbo);
+        this.gl.vertexAttribPointer(
+            this.currentProgram.attribs.vNorm,
+            3, this.gl.FLOAT, this.gl.FALSE,
+            0, 0
+        );
+        this.gl.enableVertexAttribArray(this.currentProgram.attribs.vNorm);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+    }
+
+    _bindMatrices() {
+        this.gl.uniformMatrix4fv(this.currentProgram.uniforms.mProj, this.gl.FALSE, this.projMatrix);
+        this.gl.uniformMatrix4fv(this.currentProgram.uniforms.mView, this.gl.FALSE, this.camera.getViewMatrix());
+    }
+
+    _bindLight() {
+        this.gl.uniform3f(this.currentProgram.uniforms.ambientUniformLocation, ...ambientLight);
+        this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, ...sunLightDirection);
+        this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, ...sunLightIntesity);
+        this.gl.uniform3f(this.currentProgram.uniforms.cameraPositionLocation, ...this.camera.position);
+
+    }
+
+    _bindModel(m) {
+        switch(this.mode) {
+            case 'PHONG':
+                this._bindModelPhong(m);
+                return;
+            case 'STATIC':
+                this._bindModelStatic(m);
+                return;
+            default:
+                throw new Error('wrong mode')
+        }
+    }
+
+    _bindInitial() {
+        this._bindMatrices();
+        if(this.mode == 'PHONG') {
+            this._bindLight();
+        }
     }
 
     render() {
-
         this.mirrors.forEach(m => {
             m.updateTexture();
         });
@@ -79,56 +189,17 @@ export default class WebglScene {
 
         this.renderMirrors();
 
-        this.gl.useProgram(this.program);
-        this.gl.uniformMatrix4fv(this.program.uniforms.mProj, this.gl.FALSE, this.projMatrix);
-        this.gl.uniformMatrix4fv(this.program.uniforms.mView, this.gl.FALSE, this.camera.getViewMatrix());
+        this._useProgram();
 
-        this.gl.uniform3f(this.program.uniforms.ambientUniformLocation, ...ambientLight);
-        this.gl.uniform3f(this.program.uniforms.sunlightDirUniformLocation, ...sunLightDirection);
-        this.gl.uniform3f(this.program.uniforms.sunlightIntUniformLocation, ...sunLightIntesity);
-        this.gl.uniform3f(this.program.uniforms.cameraPositionLocation, ...this.camera.position);
+        this._bindInitial();
 
         this.models.forEach(m => {
-            this.gl.uniformMatrix4fv(this.program.uniforms.mWorld, this.gl.FALSE, m.worldMatrix);
-
-            this.gl.uniform1f(this.program.uniforms.materialKd, m.material.kd);
-            this.gl.uniform1f(this.program.uniforms.materialShininess, m.material.shininess);
-
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.vbo);
-            this.gl.vertexAttribPointer(
-                this.program.attribs.vPos,
-                3, this.gl.FLOAT, this.gl.FALSE,
-                0, 0
-            );
-            this.gl.enableVertexAttribArray(this.program.attribs.vPos);
-
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.nbo);
-            this.gl.vertexAttribPointer(
-                this.program.attribs.vNorm,
-                3, this.gl.FLOAT, this.gl.FALSE,
-                0, 0
-            );
-            this.gl.enableVertexAttribArray(this.program.attribs.vNorm);
-
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, m.tbo);
-            this.gl.vertexAttribPointer(
-                this.program.attribs.vTex,
-                2, this.gl.FLOAT, this.gl.FALSE,
-                0, 0
-            );
-            this.gl.enableVertexAttribArray(this.program.attribs.vTex);
-
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-
-            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, m.ibo);
-
-            this.gl.bindTexture(this.gl.TEXTURE_2D, m.getTexture());
-            this.gl.activeTexture(this.gl.TEXTURE0);
+            this._bindModel(m);
 
             this.gl.drawElements(this.gl.TRIANGLES, m.n, this.gl.UNSIGNED_SHORT, 0);
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
         });
-    };
+    }
 
     renderMirrors() {
         if (!this.mirrorProgram) {

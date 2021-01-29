@@ -11,7 +11,7 @@ import {
     bowlingBallMaterial,
     bowlingPinMaterial
 } from './consts/modelConsts.js'
-import { vsShaderPath, fsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath } from './consts/shaderConsts.js'
+import { phongVsShaderPath, phongFsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath, staticVsShaderPath, staticFsShaderPath } from './consts/shaderConsts.js'
 import ModelsFactory from './modelsFactory.js';
 import WebglProgramFactory from './webglProgramFactory.js';
 import WebglScene from './webglScene.js';
@@ -29,10 +29,12 @@ export default class Game {
         try {
             const promises = [];
 
-            promises.push(loadTextResource(vsShaderPath));
-            promises.push(loadTextResource(fsShaderPath));
+            promises.push(loadTextResource(phongVsShaderPath));
+            promises.push(loadTextResource(phongFsShaderPath));
             promises.push(loadTextResource(mirrorVsShaderPath));
             promises.push(loadTextResource(mirrorFsShaderPath));
+            promises.push(loadTextResource(staticVsShaderPath));
+            promises.push(loadTextResource(staticFsShaderPath));
             promises.push(loadJSONResource(bowlingHallModelPath));
             promises.push(Promise.all(bowlingHallTexturesPaths.map(p => loadImage(p))));
             promises.push(loadJSONResource(bowlingPinModelPath));
@@ -41,14 +43,15 @@ export default class Game {
             promises.push(loadImage(bowlingBallTexturePath));
 
             const [
-                vsShaderText, fsShaderText,
+                phongVsShaderText, phongFsShaderText,
                 mirrorVsShaderText, mirrorFsShaderText,
+                staticVsShaderText, staticFsShaderText,
                 bowlingHallModelsObj, bowlingHallTextures,
                 bowlingPinModelObj, bowlingPinTexture,
                 bowlingBallModelObj, bowlingBallTexture
             ] = await Promise.all(promises);
 
-            this._initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText )
+            this._initWebGL(phongVsShaderText, phongFsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText);
 
             const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures, bowlingHallMaterials);
             const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
@@ -56,11 +59,12 @@ export default class Game {
             const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
                 [bowlingBallMaterial], bowlingBallInitialRotation, bowlingBallInitialTranslation);
 
-            this.scene = new WebglScene(this.gl, this.program, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel), this.mirrorProgram);
+            this.scene = new WebglScene(this.gl, this.phongProgram, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel),
+                this.mirrorProgram, this.staticProgram);
             this.scene.load();
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
-                false, this.scene, vsShaderText, fsShaderText);
+                false, this.scene, phongVsShaderText, phongFsShaderText);
             this.scene.addMirror(mirrorModel);
 
             this.scene.start();
@@ -75,15 +79,15 @@ export default class Game {
         }
     }
 
-    _initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText) {
+    _initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText) {
         this.gl = this.canvas.getContext('webgl2');
-        const gl = this.gl;
         if (!this.gl) {
             throw new Error('Your browser does not support WebGL');
         }
 
-        this.program = WebglProgramFactory.createProgram(this.gl, vsShaderText, fsShaderText)
+        this.phongProgram = WebglProgramFactory.createProgram(this.gl, vsShaderText, fsShaderText)
         this.mirrorProgram = WebglProgramFactory.createProgram(this.gl, mirrorVsShaderText, mirrorFsShaderText)
+        this.staticProgram = WebglProgramFactory.createProgram(this.gl, staticVsShaderText, staticFsShaderText)
     }
 
     _getClickCoords(clientX, clientY) {
@@ -117,7 +121,7 @@ export default class Game {
     }
 
     _onMouseUp = e => {
-        if(this.mouseMoveActive) {
+        if (this.mouseMoveActive) {
             this.mouseMoveActive = false;
             this.canvas.removeEventListener('mousemove', this._onMouseMove);
             this.bowlingBall.startMoving();
