@@ -18,7 +18,6 @@ export default class MirrorModel {
         this.worldMatrix = glMatrix.mat4.create();
 
         const vertices = [].concat.apply([], [corner1, corner2, corner3, corner4]);
-        console.log(vertices)
         const indices = [0, 1, 2, 0, 2, 3];
         const a = [corner1[0] - corner2[0], corner1[1] - corner2[1], corner1[2] - corner2[2]];
         const b = [corner3[0] - corner2[0], corner3[1] - corner2[1], corner3[2] - corner2[2]];
@@ -34,9 +33,6 @@ export default class MirrorModel {
 
         this.initScene();
         this.initBuffers(vertices, indices, normals);
-
-        console.log(this.scene);
-        console.log(this.globalScene);
     }
 
     initScene() {
@@ -47,7 +43,7 @@ export default class MirrorModel {
         this.scene.load();
     }
 
-    initBuffers(vertices, indices, normals) {
+    initBuffers(vertices, indices) {
         this.vbo = this.gl.createBuffer();
         this.ibo = this.gl.createBuffer();
         this.n = indices.length;

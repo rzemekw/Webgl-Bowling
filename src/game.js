@@ -17,6 +17,7 @@ import WebglProgramFactory from './webglProgramFactory.js';
 import WebglScene from './webglScene.js';
 import BowlingBall from './bowlingBall.js';
 import MirrorModel from './mirrorModel.js';
+import { camera2Position, cameraInitialLookAt, cameraInitialPosition } from './consts/cameraConsts.js';
 
 export default class Game {
     constructor(canvas) {
@@ -105,6 +106,7 @@ export default class Game {
     _initListeners() {
         this.canvas.addEventListener('mousedown', this._onMouseDown);
         this.canvas.addEventListener('mouseup', this._onMouseUp);
+        document.addEventListener('keydown', this._onKeyPress);
     }
 
     _onMouseDown = e => {
@@ -135,5 +137,62 @@ export default class Game {
         const xy = this.bowlingBall.calculateXY(ray.start, ray.end);
 
         this.bowlingBall.changeTranslation(xy.x, xy.y)
+    }
+
+    _changeToStaticShading() {
+        this.scene.mode = 'STATIC';
+    }
+
+    _changeToPhongShading() {
+        this.scene.mode = 'PHONG';
+    }
+
+    _startBowlingBallFollow() {
+        this._resetCamera();
+        this.scene.addUpdateEvent(this._followBallEvent);
+    }
+
+    _resetCamera() {
+        this.scene.removeUpdateEvent(this._followBallEvent);
+        this.scene.removeUpdateEvent(this._lookAtBowlingBallEvent);
+        this.scene.camera.position = cameraInitialPosition;
+        this.scene.camera.lookAt = cameraInitialLookAt;
+    }
+
+    _followBallEvent = () => {
+        const pos = this.bowlingBall.getPos();
+        pos[1] += 3;
+        this.scene.camera.position = pos;
+        this.scene.camera.lookAt = this.bowlingBall.getPos()
+    }
+
+    _startBowlingBallLookAt() {
+        this._resetCamera();
+        this.scene.camera.position = camera2Position;
+        this.scene.addUpdateEvent(this._lookAtBowlingBallEvent);
+    }
+
+    _lookAtBowlingBallEvent = () => {
+        this.scene.camera.lookAt = this.bowlingBall.getPos()
+    }
+
+    _onKeyPress = e => {
+        switch(e.key) {
+            case "z":
+                this._changeToStaticShading();
+                return;
+            case "x":
+                this._changeToPhongShading();
+                return;
+            case "c":
+                this._startBowlingBallFollow();
+                return;
+            case "v":
+                this._resetCamera();
+                return;
+            case "b":
+                this._startBowlingBallLookAt();
+                return;
+        }
     }
 }

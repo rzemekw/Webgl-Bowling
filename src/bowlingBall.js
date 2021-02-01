@@ -12,6 +12,10 @@ export default class BowlingBall {
     vy = 0;
     vz = 0;
 
+    getPos() {
+        return [...this.model.translationVector];
+    }
+
     changeTranslation(x, y) {
         const pos = this.model.translationVector;
 
