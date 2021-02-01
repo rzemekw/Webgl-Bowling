@@ -55,8 +55,10 @@ export default class Game {
             this._initWebGL(phongVsShaderText, phongFsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText);
 
             const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures, bowlingHallMaterials);
-            const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
-                ModelsFactory.createModels(this.gl, bowlingPinModelObj, [bowlingPinTexture], [bowlingPinMaterial], undefined, t)));
+            // const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
+            //     ModelsFactory.createModels(this.gl, bowlingPinModelObj, [bowlingPinTexture], [bowlingPinMaterial], undefined, t)));
+            const bowlingPinModels = ModelsFactory.createSameModels(bowlingPinInitialTranslations.length, this.gl, bowlingPinModelObj, [bowlingPinTexture],
+                [bowlingPinMaterial], [], bowlingPinInitialTranslations);
             const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
                 [bowlingBallMaterial], bowlingBallInitialRotation, bowlingBallInitialTranslation);
 

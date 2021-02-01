@@ -1,11 +1,23 @@
 export default class WebglModel {
-    constructor(vertices, indices, normals, texCoords, texture, gl, rotationAngles, translationVector, material) {
+    constructor(rotationAngles, translationVector, material) {
+        this.material = material;
+
+        this.worldMatrix = glMatrix.mat4.create();
+        if (rotationAngles) {
+            this.xRotationAngle = rotationAngles[0];
+            this.yRotationAngle = rotationAngles[1];
+            this.zRotationAngle = rotationAngles[2];
+        }
+        this.translationVector = translationVector;
+        this.applyTransform();
+    }
+
+    initBuffers(vertices, indices, normals, texCoords, texture, gl) {
         this.vbo = gl.createBuffer();
         this.ibo = gl.createBuffer();
         this.nbo = gl.createBuffer();
         this.tbo = gl.createBuffer();
         this.n = indices.length;
-        this.material = material;
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -32,15 +44,6 @@ export default class WebglModel {
             texture
         );
         gl.bindTexture(gl.TEXTURE_2D, null);
-
-        this.worldMatrix = glMatrix.mat4.create();
-        if (rotationAngles) {
-            this.xRotationAngle = rotationAngles[0];
-            this.yRotationAngle = rotationAngles[1];
-            this.zRotationAngle = rotationAngles[2];
-        }
-        this.translationVector = translationVector;
-        this.applyTransform();
     }
 
     onUpdate = [];
