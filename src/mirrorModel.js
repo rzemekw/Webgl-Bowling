@@ -60,7 +60,8 @@ export default class MirrorModel {
     updateTexture() {
         const camera = this.globalScene.camera;
         const nPos = this.getNewPos(camera.position[0], camera.position[1], camera.position[2]);
-        this.scene.camera = new Camera(nPos, this.mid, camera.up);
+        const lookAt = this.getNewPos(camera.lookAt[0], camera.lookAt[1], camera.lookAt[2]);
+        this.scene.camera = new Camera(nPos, lookAt, camera.up);
 
         this.projMatrix = this.scene.projMatrix;
         this.viewMatrix = this.scene.camera.getViewMatrix();
