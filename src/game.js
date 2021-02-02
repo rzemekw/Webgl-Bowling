@@ -9,7 +9,12 @@ import {
     mirrorCorners,
     bowlingHallMaterials,
     bowlingBallMaterial,
-    bowlingPinMaterial
+    bowlingPinMaterial,
+    reflectorModelPath,
+    reflectorTexturePath,
+    reflectorInitialRotation,
+    reflectorInitialTranslation,
+    reflectorMaterial
 } from './consts/modelConsts.js'
 import { phongVsShaderPath, phongFsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath, staticVsShaderPath, staticFsShaderPath } from './consts/shaderConsts.js'
 import ModelsFactory from './modelsFactory.js';
@@ -42,6 +47,8 @@ export default class Game {
             promises.push(loadImage(bowlingPinTexturePath));
             promises.push(loadJSONResource(bowlingBallModelPath));
             promises.push(loadImage(bowlingBallTexturePath));
+            promises.push(loadJSONResource(reflectorModelPath));
+            promises.push(loadImage(reflectorTexturePath));
 
             const [
                 phongVsShaderText, phongFsShaderText,
@@ -49,20 +56,21 @@ export default class Game {
                 staticVsShaderText, staticFsShaderText,
                 bowlingHallModelsObj, bowlingHallTextures,
                 bowlingPinModelObj, bowlingPinTexture,
-                bowlingBallModelObj, bowlingBallTexture
+                bowlingBallModelObj, bowlingBallTexture,
+                reflectorModelObj, reflectorTexture
             ] = await Promise.all(promises);
 
             this._initWebGL(phongVsShaderText, phongFsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText);
 
             const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures, bowlingHallMaterials);
-            // const bowlingPinModels = [].concat.apply([], bowlingPinInitialTranslations.map(t =>
-            //     ModelsFactory.createModels(this.gl, bowlingPinModelObj, [bowlingPinTexture], [bowlingPinMaterial], undefined, t)));
             const bowlingPinModels = ModelsFactory.createSameModels(bowlingPinInitialTranslations.length, this.gl, bowlingPinModelObj, [bowlingPinTexture],
                 [bowlingPinMaterial], [], bowlingPinInitialTranslations);
             const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
                 [bowlingBallMaterial], bowlingBallInitialRotation, bowlingBallInitialTranslation);
+            const reflectorModel = ModelsFactory.createModels(this.gl, reflectorModelObj, [reflectorTexture],
+                [reflectorMaterial], reflectorInitialRotation, reflectorInitialTranslation);
 
-            this.scene = new WebglScene(this.gl, this.phongProgram, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel),
+            this.scene = new WebglScene(this.gl, this.phongProgram, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel, reflectorModel),
                 this.mirrorProgram, this.staticProgram);
             this.scene.load();
 

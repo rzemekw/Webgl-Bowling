@@ -1,6 +1,7 @@
 import bowlingHall from '../models/bowlingHall.json'
 import bowlingBall from '../models/bowlingBall.json'
 import bowlingPin from '../models/bowlingPin.json'
+import reflector from '../models/reflector.json'
 
 import wallsImg from '../textures/walls.png'
 import floorimg from '../textures/floor.png'
@@ -9,8 +10,8 @@ import barrierImg from '../textures/barrier.png'
 import holeImg from '../textures/hole.png'
 
 import bowlingBallImg from '../textures/bowlingBall.png'
-
 import bowlingPinImg from '../textures/bowlingPin.png'
+import reflectorImg from '../textures/reflector.png'
 
 export const bowlingHallModelPath = bowlingHall
 export const bowlingHallTexturesPaths = [
@@ -99,4 +100,13 @@ export const mirrorCorners = [
     [-6.02, -10, 1.5],
     [-6.02, -10, -0.75],
 ]
+
+export const reflectorModelPath = reflector
+export const reflectorTexturePath = reflectorImg
+export const reflectorMaterial = {
+    kd: 0.6,
+    shininess: 5
+}
+export const reflectorInitialTranslation = [0, 0, 1];
+export const reflectorInitialRotation = [-30 * Math.PI / 180, -45 * Math.PI / 180, 0];
 
