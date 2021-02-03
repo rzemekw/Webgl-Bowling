@@ -76,7 +76,7 @@ export default class Game {
             this.scene.load();
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
-                false, this.scene, phongVsShaderText, phongFsShaderText);
+                false, this.scene);
             this.scene.addMirror(mirrorModel);
             
             this.reflector = new Reflector(reflectorModel[0], this.scene, 10, new Float32Array([1.5, 1.5, 1.5]));
