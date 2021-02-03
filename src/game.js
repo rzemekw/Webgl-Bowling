@@ -23,6 +23,7 @@ import WebglScene from './webglScene.js';
 import BowlingBall from './bowlingBall.js';
 import MirrorModel from './mirrorModel.js';
 import { camera2Position, cameraInitialLookAt, cameraInitialPosition } from './consts/cameraConsts.js';
+import Reflector from './reflector'
 
 export default class Game {
     constructor(canvas) {
@@ -77,6 +78,9 @@ export default class Game {
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
                 false, this.scene, phongVsShaderText, phongFsShaderText);
             this.scene.addMirror(mirrorModel);
+            
+            this.reflector = new Reflector(reflectorModel[0], this.scene, 10, new Float32Array([1.5, 1.5, 1.5]));
+            this.scene.addReflector(this.reflector);
 
             this.scene.start();
 

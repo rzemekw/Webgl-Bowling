@@ -1,6 +1,7 @@
 import Camera from './camera.js'
 import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp } from './consts/cameraConsts.js';
 import { ambientLight, sunLightDirection, sunLightIntesity } from './consts/lightConsts.js';
+import { maxReflectors } from './consts/shaderConsts.js';
 
 export default class WebglScene {
     constructor(gl, phongProgram, models, mirrorProgram, staticProgram) {
@@ -15,6 +16,7 @@ export default class WebglScene {
     projMatrix = glMatrix.mat4.create();
     updateEvents = [];
     mirrors = [];
+    reflectors = [];
 
     camera = new Camera(
         cameraInitialPosition,
@@ -37,6 +39,13 @@ export default class WebglScene {
             materialKd: this.gl.getUniformLocation(this.phongProgram, 'material.kd'),
             materialShininess: this.gl.getUniformLocation(this.phongProgram, 'material.shininess'),
             cameraPositionLocation: this.gl.getUniformLocation(this.phongProgram, 'cameraPosition'),
+            reflectorsNumLocation: this.gl.getUniformLocation(this.phongProgram, 'reflectorsNum'),
+
+            reflectorsLocations: [...Array(maxReflectors).keys()].map(i => ({
+                focusLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].focus`),
+                worldLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].world`),
+                intensityLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].intensity`),
+            }))
         };
 
         this.phongProgram.attribs = {
@@ -153,6 +162,13 @@ export default class WebglScene {
         this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, ...sunLightDirection);
         this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, ...sunLightIntesity);
         this.gl.uniform3f(this.currentProgram.uniforms.cameraPositionLocation, ...this.camera.position);
+        this.gl.uniform1i(this.currentProgram.uniforms.reflectorsNumLocation, this.reflectors.length);
+
+        this.reflectors.forEach((r, i) => {
+            this.gl.uniformMatrix4fv(this.currentProgram.uniforms.reflectorsLocations[i].worldLocation, this.gl.FALSE, r.getWorld());
+            this.gl.uniform1f(this.currentProgram.uniforms.reflectorsLocations[i].focusLocation, r.focus);
+            this.gl.uniform3f(this.currentProgram.uniforms.reflectorsLocations[i].intensityLocation, ...r.intensity);
+        })
 
     }
 
@@ -287,5 +303,9 @@ export default class WebglScene {
 
     addMirror(mirrorModel) {
         this.mirrors.push(mirrorModel);
+    }
+
+    addReflector(reflector) {
+        this.reflectors.push(reflector);
     }
 }

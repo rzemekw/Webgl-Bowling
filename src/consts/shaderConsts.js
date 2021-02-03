@@ -11,3 +11,5 @@ export const mirrorVsShaderPath = mirrorVsShader;
 export const mirrorFsShaderPath = mirrorFsShader;
 export const staticVsShaderPath = staticVsShader;
 export const staticFsShaderPath = staticFsShader;
+
+export const maxReflectors = 20;

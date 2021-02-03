@@ -7,6 +7,7 @@ attribute vec3 vertNormal;
 varying vec2 fragTexCoord;
 varying vec3 fragNormal;
 varying vec3 surfaceToView;
+varying vec3 fragVertPosition;
 
 uniform mat4 mWorld;
 uniform mat4 mView;
@@ -15,6 +16,7 @@ uniform vec3 cameraPosition;
 
 void main()
 {
+  fragVertPosition = vertPosition;
   fragTexCoord = vertTexCoord;
   fragNormal = (mWorld * vec4(vertNormal, 0.0)).xyz;
 
