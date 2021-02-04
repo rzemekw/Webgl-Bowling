@@ -44,22 +44,27 @@ void main()
 	vec3 diffuseLight = sun.color * max(dot(n, l), 0.0);
 	vec3 specularLight = sun.color * pow(max(dot(v, r), 0.0), material.shininess);
 
-	vec3 reflectorsIntensity;
-
 	for(int i = 0; i < MAX_REFLECTORS; i++) {
 		if(i >= reflectorsNum) {
 			break;
 		} 
 		vec3 lightPos = (reflectors[i].world * vec4(0,0,0,1)).xyz;
 		vec3 reflectorDirection = normalize((reflectors[i].world * vec4(0,1,0,0)).xyz);
-		vec3 lightDirection = normalize(lightPos - fragVertPosition);
+		vec3 lightDirection = lightPos - fragVertPosition;
+		vec3 lightDirectionNorm = normalize(lightDirection);
 
+		if(dot(reflectorDirection, lightDirectionNorm) <= 0.0) {
+			continue;
+		}
 
-		vec3 reflectorIntensity = pow(max(dot(reflectorDirection, lightDirection), 0.0), reflectors[i].focus) * reflectors[i].intensity;
+		float lightDistance = length(lightDirection);
 
-		vec3 rr = normalize(2.0 * dot(n, lightDirection) * n - lightDirection);
+		vec3 reflectorIntensity = pow(max(dot(reflectorDirection, lightDirectionNorm), 0.0), reflectors[i].focus) * reflectors[i].intensity;
+		reflectorIntensity *= (reflectors[i].focus / lightDistance / lightDistance);
 
-		diffuseLight += reflectorIntensity * max(dot(n, lightDirection), 0.0);
+		vec3 rr = normalize(2.0 * dot(n, lightDirectionNorm) * n - lightDirectionNorm);
+
+		diffuseLight += reflectorIntensity * max(dot(n, lightDirectionNorm), 0.0);
 		specularLight += reflectorIntensity * pow(max(dot(v, rr), 0.0), material.shininess);
 		
 	}

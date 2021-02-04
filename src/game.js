@@ -38,9 +38,9 @@ export default class Game {
             this.scene.addMirror(mirrorModel);
 
             this.reflectors = [];
-            this.reflectors.push(new Reflector(reflectorModels[0], this.scene, 10, new Float32Array([1.5, 1.5, 0])));
-            this.reflectors.push(new Reflector(reflectorModels[1], this.scene, 10, new Float32Array([2, 0, 1.5])));
-            this.reflectors.push(new Reflector(reflectorModels[2], this.scene, 10, new Float32Array([0, 1, 2])));
+            this.reflectors.push(new Reflector(reflectorModels[0], this.scene, 10, new Float32Array([3, 3, 0])));
+            this.reflectors.push(new Reflector(reflectorModels[1], this.scene, 10, new Float32Array([3, 1, 1])));
+            this.reflectors.push(new Reflector(reflectorModels[2], this.scene, 10, new Float32Array([0, 2, 4])));
             this.reflectors.forEach(r => this.scene.addReflector(r));
 
             this.scene.start();

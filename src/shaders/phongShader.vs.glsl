@@ -16,7 +16,7 @@ uniform vec3 cameraPosition;
 
 void main()
 {
-  fragVertPosition = vertPosition;
+  fragVertPosition = (mWorld * vec4(vertPosition, 1.0)).xyz;
   fragTexCoord = vertTexCoord;
   fragNormal = (mWorld * vec4(vertNormal, 0.0)).xyz;
 

@@ -113,8 +113,13 @@ export const reflectorInitialTranslations = [
     [2.5, 5, 1.35],
 ];
 export const reflectorInitialRotations = [
-    [0, 0, Math.PI / 2],
     [Math.PI / 2, 0, 0],
-    [0, 0, 0]
+    [Math.PI / 2, 0, 0],
+    [Math.PI / 2, 0, 0]
 ];
+// export const reflectorInitialRotations = [
+//     [0, 0, Math.PI / 2],
+//     [Math.PI / 2, 0, 0],
+//     [0, 0, 0]
+// ];
 

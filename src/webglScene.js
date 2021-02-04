@@ -13,6 +13,7 @@ export default class WebglScene {
         result.currentProgram = scene.currentProgram;
         result.models = scene.models;
         result.mirrors = [...scene.mirrors];
+        result.reflectors = scene.reflectors;
 
         return result;
     }
