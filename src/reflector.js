@@ -26,14 +26,29 @@ export default class Reflector {
         pos[1] += this.moveData.vy * interval;
         pos[2] += this.moveData.vz * interval;
 
-        if(this.moveData.xBound && (this.moveData.xBound[0] >= pos[0] || this.moveData.xBound[1] <= pos[0])) {
-            this.moveData.vx = -this.moveData.vx;
+        if(this.moveData.xBound) {
+            if(this.moveData.xBound[0] >= pos[0]) {
+                this.moveData.vx =  Math.abs(this.moveData.vx);
+            }
+            else if(this.moveData.xBound[1] <= pos[0]) {
+                this.moveData.vx = -Math.abs(this.moveData.vx);
+            }
         }
-        if(this.moveData.yBound && (this.moveData.yBound[0] >= pos[1] || this.moveData.yBound[1] <= pos[1])) {
-            this.moveData.vy = -this.moveData.vy;
+        if(this.moveData.yBound) {
+            if(this.moveData.yBound[0] >= pos[1]) {
+                this.moveData.vy =  Math.abs(this.moveData.vy);
+            }
+            else if(this.moveData.yBound[1] <= pos[1]) {
+                this.moveData.vy = -Math.abs(this.moveData.vy);
+            }
         } 
-        if(this.moveData.zBound && (this.moveData.zBound[0] >= pos[2] || this.moveData.zBound[1] <= pos[2])) {
-            this.moveData.vz = -this.moveData.vz;
+        if(this.moveData.zBound ) {
+            if(this.moveData.zBound[0] >= pos[2]) {
+                this.moveData.vz =  Math.abs(this.moveData.vz);
+            }
+            else if(this.moveData.zBound[1] <= pos[2]) {
+                this.moveData.vz = -Math.abs(this.moveData.vz);
+            }
         } 
 
         this.model.xRotationAngle += this.moveData.vax;
