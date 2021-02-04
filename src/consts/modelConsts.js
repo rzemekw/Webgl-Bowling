@@ -24,23 +24,23 @@ export const bowlingHallTexturesPaths = [
 export const bowlingHallMaterials = [
     {
         kd: 0.3,
-        shininess: 5
+        shininess: 2
     },
     {
         kd: 0.5,
-        shininess: 10
+        shininess: 3
     },
     {
         kd: 0,
-        shininess: 1
+        shininess: 2
     },
     {
         kd: 0.6,
-        shininess: 20
+        shininess: 6
     },
     {
         kd: 0.6,
-        shininess: 20
+        shininess: 6
     }
 ]
 
@@ -53,7 +53,7 @@ export const bowlingBallInitialTranslation = new Float32Array([0, 18, 0]);
 export const bowlingBallRadius = 0.406;
 export const bowlingBallMaterial = {
     kd: 0.6,
-    shininess: 20
+    shininess: 6
 }
 
 
@@ -61,7 +61,7 @@ export const bowlingPinModelPath = bowlingPin
 export const bowlingPinTexturePath = bowlingPinImg
 export const bowlingPinMaterial = {
     kd: 0.4,
-    shininess: 5
+    shininess: 2
 }
 
 const firstBowlingPinInitialTranslation = [0, -21.4238, -1.371];
@@ -105,7 +105,7 @@ export const reflectorModelPath = reflector
 export const reflectorTexturePath = reflectorImg
 export const reflectorMaterial = {
     kd: 0.6,
-    shininess: 5
+    shininess: 2
 }
 export const reflectorInitialTranslations = [
     [-3.5, -5, 0.8],
@@ -117,9 +117,4 @@ export const reflectorInitialRotations = [
     [Math.PI / 2, 0, 0],
     [Math.PI / 2, 0, 0]
 ];
-// export const reflectorInitialRotations = [
-//     [0, 0, Math.PI / 2],
-//     [Math.PI / 2, 0, 0],
-//     [0, 0, 0]
-// ];
 

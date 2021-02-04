@@ -22,6 +22,10 @@ export default class Reflector {
     moveEvent = interval => {
         const pos = this.model.translationVector;
 
+        if(interval > 1000) {
+            interval = 1000;
+        }
+
         pos[0] += this.moveData.vx * interval;
         pos[1] += this.moveData.vy * interval;
         pos[2] += this.moveData.vz * interval;

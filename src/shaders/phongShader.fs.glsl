@@ -53,10 +53,6 @@ void main()
 		vec3 lightDirection = lightPos - fragVertPosition;
 		vec3 lightDirectionNorm = normalize(lightDirection);
 
-		if(dot(reflectorDirection, lightDirectionNorm) <= 0.0) {
-			continue;
-		}
-
 		float lightDistance = length(lightDirection);
 
 		vec3 reflectorIntensity = pow(max(dot(reflectorDirection, lightDirectionNorm), 0.0), reflectors[i].focus) * reflectors[i].intensity;

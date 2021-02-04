@@ -26,13 +26,12 @@ export default class MirrorModel {
         if (normalInverted) {
             normal = normal.map(x => -x);
         }
-        const normals = [].concat.apply([], [normal, normal, normal, normal]);
 
         this.normal = normal;
         this.planeD = -(normal[0] * corner1[0] + normal[1] * corner1[1] + normal[2] * corner1[2]);
 
         this.initScene();
-        this.initBuffers(vertices, indices, normals);
+        this.initBuffers(vertices, indices);
     }
 
     initScene() {
