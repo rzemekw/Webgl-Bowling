@@ -43,6 +43,10 @@ export default class Game {
             this.reflectors.push(new Reflector(reflectorModels[2], this.scene, 10, new Float32Array([0, 2, 4])));
             this.reflectors.forEach(r => this.scene.addReflector(r));
 
+            this.reflectors[0].startMoving({vy: 0.003, vax: 0.01, vaz: 0.02, yBound: [-20, 10]});
+            this.reflectors[1].startMoving({vy: -0.005, vax: 0.015, vaz: 0.02, yBound: [-20, 10]});
+            this.reflectors[2].startMoving({vy: 0.004, vax: 0.02, vaz: 0.03, yBound: [-20, 10]});
+
             this.scene.start();
 
             this.bowlingBall = new BowlingBall(bowlingBallModel, this.scene);
