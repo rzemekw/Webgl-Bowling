@@ -38,9 +38,8 @@ export default class MirrorModel {
     initScene() {
         this.gl = this.globalScene.gl;
         this.canvas = this.gl.canvas;
-        this.scene = new WebglScene(this.gl, this.globalScene.phongProgram, [...this.globalScene.models],
-            this.globalScene.mirrorProgram, this.globalScene.staticProgram);
-        this.scene.load();
+        this.scene = WebglScene.createFromScene(this.globalScene);
+        
     }
 
     initBuffers(vertices, indices) {

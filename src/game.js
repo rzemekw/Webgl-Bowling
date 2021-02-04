@@ -1,90 +1,48 @@
-import { loadImage, loadTextResource, loadJSONResource } from './util.js'
 import {
-    bowlingHallModelPath, bowlingHallTexturesPaths, bowlingPinModelPath, bowlingPinTexturePath,
-    bowlingPinInitialTranslations,
-    bowlingBallModelPath,
-    bowlingBallTexturePath,
-    bowlingBallInitialRotation,
-    bowlingBallInitialTranslation,
     mirrorCorners,
-    bowlingHallMaterials,
-    bowlingBallMaterial,
-    bowlingPinMaterial,
-    reflectorModelPath,
-    reflectorTexturePath,
-    reflectorInitialRotation,
-    reflectorInitialTranslation,
-    reflectorMaterial
 } from './consts/modelConsts.js'
-import { phongVsShaderPath, phongFsShaderPath, mirrorVsShaderPath, mirrorFsShaderPath, staticVsShaderPath, staticFsShaderPath } from './consts/shaderConsts.js'
-import ModelsFactory from './modelsFactory.js';
-import WebglProgramFactory from './webglProgramFactory.js';
 import WebglScene from './webglScene.js';
 import BowlingBall from './bowlingBall.js';
 import MirrorModel from './mirrorModel.js';
 import { camera2Position, cameraInitialLookAt, cameraInitialPosition } from './consts/cameraConsts.js';
 import Reflector from './reflector'
+import ModelRepository from './repository/modelRepository.js';
 
 export default class Game {
     constructor(canvas) {
         this.canvas = canvas;
+        this.gl = this.canvas.getContext('webgl2');
+        this.scene = new WebglScene(this.gl);
     }
-    gl = null;
     mouseDown = false;
 
     async start() {
         try {
-            const promises = [];
-
-            promises.push(loadTextResource(phongVsShaderPath));
-            promises.push(loadTextResource(phongFsShaderPath));
-            promises.push(loadTextResource(mirrorVsShaderPath));
-            promises.push(loadTextResource(mirrorFsShaderPath));
-            promises.push(loadTextResource(staticVsShaderPath));
-            promises.push(loadTextResource(staticFsShaderPath));
-            promises.push(loadJSONResource(bowlingHallModelPath));
-            promises.push(Promise.all(bowlingHallTexturesPaths.map(p => loadImage(p))));
-            promises.push(loadJSONResource(bowlingPinModelPath));
-            promises.push(loadImage(bowlingPinTexturePath));
-            promises.push(loadJSONResource(bowlingBallModelPath));
-            promises.push(loadImage(bowlingBallTexturePath));
-            promises.push(loadJSONResource(reflectorModelPath));
-            promises.push(loadImage(reflectorTexturePath));
-
             const [
-                phongVsShaderText, phongFsShaderText,
-                mirrorVsShaderText, mirrorFsShaderText,
-                staticVsShaderText, staticFsShaderText,
-                bowlingHallModelsObj, bowlingHallTextures,
-                bowlingPinModelObj, bowlingPinTexture,
-                bowlingBallModelObj, bowlingBallTexture,
-                reflectorModelObj, reflectorTexture
-            ] = await Promise.all(promises);
+                bowlingHallModels,
+                bowlingPinModels,
+                bowlingBallModel,
+                reflectorModel
+            ] = await Promise.all([
+                ModelRepository.getBowlingHallModels(this.gl),
+                ModelRepository.getBowlingPinModels(this.gl),
+                ModelRepository.getBowlingBallModel(this.gl),
+                ModelRepository.getReflectorModel(this.gl)
+            ])
 
-            this._initWebGL(phongVsShaderText, phongFsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText);
-
-            const bowlingHallModels = ModelsFactory.createModels(this.gl, bowlingHallModelsObj, bowlingHallTextures, bowlingHallMaterials);
-            const bowlingPinModels = ModelsFactory.createSameModels(bowlingPinInitialTranslations.length, this.gl, bowlingPinModelObj, [bowlingPinTexture],
-                [bowlingPinMaterial], [], bowlingPinInitialTranslations);
-            const bowlingBallModel = ModelsFactory.createModels(this.gl, bowlingBallModelObj, [bowlingBallTexture],
-                [bowlingBallMaterial], bowlingBallInitialRotation, bowlingBallInitialTranslation);
-            const reflectorModel = ModelsFactory.createModels(this.gl, reflectorModelObj, [reflectorTexture],
-                [reflectorMaterial], reflectorInitialRotation, reflectorInitialTranslation);
-
-            this.scene = new WebglScene(this.gl, this.phongProgram, bowlingHallModels.concat(bowlingPinModels, bowlingBallModel, reflectorModel),
-                this.mirrorProgram, this.staticProgram);
-            this.scene.load();
+            this.scene.loadModels([...bowlingHallModels, ...bowlingPinModels, bowlingBallModel, reflectorModel]);
+            await this.scene.loadPrograms();
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
                 false, this.scene);
             this.scene.addMirror(mirrorModel);
-            
-            this.reflector = new Reflector(reflectorModel[0], this.scene, 10, new Float32Array([1.5, 1.5, 1.5]));
+
+            this.reflector = new Reflector(reflectorModel, this.scene, 10, new Float32Array([1.5, 1.5, 1.5]));
             this.scene.addReflector(this.reflector);
 
             this.scene.start();
 
-            this.bowlingBall = new BowlingBall(bowlingBallModel[0], this.scene);
+            this.bowlingBall = new BowlingBall(bowlingBallModel, this.scene);
 
             this._initListeners();
         }
@@ -92,17 +50,6 @@ export default class Game {
             console.error(e);
             return;
         }
-    }
-
-    _initWebGL(vsShaderText, fsShaderText, mirrorVsShaderText, mirrorFsShaderText, staticVsShaderText, staticFsShaderText) {
-        this.gl = this.canvas.getContext('webgl2');
-        if (!this.gl) {
-            throw new Error('Your browser does not support WebGL');
-        }
-
-        this.phongProgram = WebglProgramFactory.createProgram(this.gl, vsShaderText, fsShaderText)
-        this.mirrorProgram = WebglProgramFactory.createProgram(this.gl, mirrorVsShaderText, mirrorFsShaderText)
-        this.staticProgram = WebglProgramFactory.createProgram(this.gl, staticVsShaderText, staticFsShaderText)
     }
 
     _getClickCoords(clientX, clientY) {
@@ -191,7 +138,7 @@ export default class Game {
     }
 
     _onKeyPress = e => {
-        switch(e.key) {
+        switch (e.key) {
             case "z":
                 this._changeToStaticShading();
                 return;

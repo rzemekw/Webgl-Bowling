@@ -1,58 +1,24 @@
 import Camera from './camera.js'
 import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp } from './consts/cameraConsts.js';
 import { ambientLight, sunLightDirection, sunLightIntesity } from './consts/lightConsts.js';
-import { maxReflectors } from './consts/shaderConsts.js';
+import ShaderProgramRepository from './repository/shaderProgramRepository.js';
 
 export default class WebglScene {
-    constructor(gl, phongProgram, models, mirrorProgram, staticProgram) {
-        this.gl = gl;
-        this.phongProgram = phongProgram;
-        this.models = models;
-        this.mirrorProgram = mirrorProgram;
-        this.staticProgram = staticProgram;
-        this.currentProgram = phongProgram;
+
+    static createFromScene(scene) {
+        const result = new WebglScene(scene.gl)
+        result.phongProgram = scene.phongProgram;
+        result.staticProgram = scene.staticProgram;
+        result.mirrorProgram = scene.mirrorProgram;
+        result.currentProgram = scene.currentProgram;
+        result.models = scene.models;
+        result.mirrors = [...scene.mirrors];
+
+        return result;
     }
 
-    projMatrix = glMatrix.mat4.create();
-    updateEvents = [];
-    mirrors = [];
-    reflectors = [];
-
-    camera = new Camera(
-        cameraInitialPosition,
-        cameraInitialLookAt,
-        cameraInitialUp
-    );
-
-    mode = 'PHONG'
-
-
-    load() {
-        this.phongProgram.uniforms = {
-            mProj: this.gl.getUniformLocation(this.phongProgram, 'mProj'),
-            mView: this.gl.getUniformLocation(this.phongProgram, 'mView'),
-            mWorld: this.gl.getUniformLocation(this.phongProgram, 'mWorld'),
-
-            ambientUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'ambientLightIntensity'),
-            sunlightDirUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'sun.direction'),
-            sunlightIntUniformLocation: this.gl.getUniformLocation(this.phongProgram, 'sun.color'),
-            materialKd: this.gl.getUniformLocation(this.phongProgram, 'material.kd'),
-            materialShininess: this.gl.getUniformLocation(this.phongProgram, 'material.shininess'),
-            cameraPositionLocation: this.gl.getUniformLocation(this.phongProgram, 'cameraPosition'),
-            reflectorsNumLocation: this.gl.getUniformLocation(this.phongProgram, 'reflectorsNum'),
-
-            reflectorsLocations: [...Array(maxReflectors).keys()].map(i => ({
-                focusLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].focus`),
-                worldLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].world`),
-                intensityLocation: this.gl.getUniformLocation(this.phongProgram, `reflectors[${i}].intensity`),
-            }))
-        };
-
-        this.phongProgram.attribs = {
-            vPos: this.gl.getAttribLocation(this.phongProgram, 'vertPosition'),
-            vNorm: this.gl.getAttribLocation(this.phongProgram, 'vertNormal'),
-            vTex: this.gl.getAttribLocation(this.phongProgram, 'vertTexCoord'),
-        };
+    constructor(gl) {
+        this.gl = gl;
 
         glMatrix.mat4.perspective(
             this.projMatrix,
@@ -61,39 +27,41 @@ export default class WebglScene {
             0.1,
             1000
         );
+    }
 
-        if (this.mirrorProgram) {
-            this.mirrorProgram.uniforms = {
-                mProj: this.gl.getUniformLocation(this.mirrorProgram, 'mProj'),
-                mView: this.gl.getUniformLocation(this.mirrorProgram, 'mView'),
-                mWorld: this.gl.getUniformLocation(this.mirrorProgram, 'mWorld'),
-                mirrorMView: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMView'),
-                mirrorMProj: this.gl.getUniformLocation(this.mirrorProgram, 'mirrorMProj'),
-            }
+    camera = new Camera(
+        cameraInitialPosition,
+        cameraInitialLookAt,
+        cameraInitialUp
+    );
+    projMatrix = glMatrix.mat4.create();
 
-            this.mirrorProgram.attribs = {
-                vPos: this.gl.getAttribLocation(this.phongProgram, 'vertPosition'),
-            };
-        }
+    updateEvents = [];
 
-        if (this.staticProgram) {
-            this.staticProgram.uniforms = {
-                mProj: this.gl.getUniformLocation(this.staticProgram, 'mProj'),
-                mView: this.gl.getUniformLocation(this.staticProgram, 'mView'),
-                mWorld: this.gl.getUniformLocation(this.staticProgram, 'mWorld'),
-            };
+    models = [];
+    mirrors = [];
+    reflectors = [];
 
-            this.staticProgram.attribs = {
-                vPos: this.gl.getAttribLocation(this.staticProgram, 'vertPosition'),
-                vNorm: this.gl.getAttribLocation(this.staticProgram, 'vertNormal'),
-                vTex: this.gl.getAttribLocation(this.staticProgram, 'vertTexCoord'),
-            };
-        }
+    mode = 'PHONG'
 
+    async loadPrograms() {
+        const [phong, staticp, mirror] = await Promise.all([
+            ShaderProgramRepository.getPhongProgram(this.gl),
+            ShaderProgramRepository.getStaticProgram(this.gl),
+            ShaderProgramRepository.getMirrorProgram(this.gl)
+        ]);
+        this.phongProgram = phong;
+        this.staticProgram = staticp;
+        this.mirrorProgram = mirror;
+        this.currentProgram = phong;
+    }
+
+    loadModels(models) {
+        this.models = models;
     }
 
     _useProgram() {
-        switch(this.mode) {
+        switch (this.mode) {
             case 'PHONG':
                 this.currentProgram = this.phongProgram;
                 break;
@@ -173,7 +141,7 @@ export default class WebglScene {
     }
 
     _bindModel(m) {
-        switch(this.mode) {
+        switch (this.mode) {
             case 'PHONG':
                 this._bindModelPhong(m);
                 return;
@@ -187,7 +155,7 @@ export default class WebglScene {
 
     _bindInitial() {
         this._bindMatrices();
-        if(this.mode == 'PHONG') {
+        if (this.mode == 'PHONG') {
             this._bindLight();
         }
     }
