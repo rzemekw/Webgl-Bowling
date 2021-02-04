@@ -22,23 +22,26 @@ export default class Game {
                 bowlingHallModels,
                 bowlingPinModels,
                 bowlingBallModel,
-                reflectorModel
+                reflectorModels
             ] = await Promise.all([
                 ModelRepository.getBowlingHallModels(this.gl),
                 ModelRepository.getBowlingPinModels(this.gl),
                 ModelRepository.getBowlingBallModel(this.gl),
-                ModelRepository.getReflectorModel(this.gl)
+                ModelRepository.getReflectorModels(this.gl)
             ])
 
-            this.scene.loadModels([...bowlingHallModels, ...bowlingPinModels, bowlingBallModel, reflectorModel]);
+            this.scene.loadModels([...bowlingHallModels, ...bowlingPinModels, bowlingBallModel, ...reflectorModels]);
             await this.scene.loadPrograms();
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
                 false, this.scene);
             this.scene.addMirror(mirrorModel);
 
-            this.reflector = new Reflector(reflectorModel, this.scene, 10, new Float32Array([1.5, 1.5, 1.5]));
-            this.scene.addReflector(this.reflector);
+            this.reflectors = [];
+            this.reflectors.push(new Reflector(reflectorModels[0], this.scene, 10, new Float32Array([1.5, 1.5, 0])));
+            this.reflectors.push(new Reflector(reflectorModels[1], this.scene, 10, new Float32Array([2, 0, 1.5])));
+            this.reflectors.push(new Reflector(reflectorModels[2], this.scene, 10, new Float32Array([0, 1, 2])));
+            this.reflectors.forEach(r => this.scene.addReflector(r));
 
             this.scene.start();
 

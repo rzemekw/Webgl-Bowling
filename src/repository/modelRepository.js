@@ -2,7 +2,7 @@ import {
     bowlingBallInitialRotation, bowlingBallInitialTranslation, bowlingBallMaterial,
     bowlingBallModelPath, bowlingBallTexturePath, bowlingHallMaterials, bowlingHallModelPath,
     bowlingHallTexturesPaths, bowlingPinInitialTranslations, bowlingPinMaterial, bowlingPinModelPath,
-    bowlingPinTexturePath, reflectorInitialRotation, reflectorInitialTranslation, reflectorMaterial,
+    bowlingPinTexturePath, reflectorInitialRotations, reflectorInitialTranslations, reflectorMaterial,
     reflectorModelPath, reflectorTexturePath
 } from "../consts/modelConsts";
 import ModelsFactory from "./modelsFactory";
@@ -27,9 +27,9 @@ export default class ModelRepository {
             [bowlingPinMaterial], [], bowlingPinInitialTranslations);
     }
 
-    static async getReflectorModel(gl) {
+    static async getReflectorModels(gl) {
         const [reflectorModelObj, reflectorTexture] = await Promise.all([loadJSONResource(reflectorModelPath), loadImage(reflectorTexturePath)]);
-        return ModelsFactory.createModels(gl, reflectorModelObj, [reflectorTexture],
-            [reflectorMaterial], reflectorInitialRotation, reflectorInitialTranslation)[0];
+        return ModelsFactory.createSameModels(reflectorInitialTranslations.length, gl, reflectorModelObj, [reflectorTexture],
+            [reflectorMaterial], reflectorInitialRotations, reflectorInitialTranslations);
     }
 }

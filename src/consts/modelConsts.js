@@ -107,7 +107,14 @@ export const reflectorMaterial = {
     kd: 0.6,
     shininess: 5
 }
-export const reflectorInitialTranslation = [0, 0, 1];
-export const reflectorInitialRotation = [0, 0, Math.PI/2];
-// export const reflectorInitialRotation = [-30 * Math.PI / 180, -45 * Math.PI / 180, 0];
+export const reflectorInitialTranslations = [
+    [-3.5, -5, 0.8],
+    [-0.5, 0, 1.05],
+    [2.5, 5, 1.35],
+];
+export const reflectorInitialRotations = [
+    [0, 0, Math.PI / 2],
+    [Math.PI / 2, 0, 0],
+    [0, 0, 0]
+];
 
