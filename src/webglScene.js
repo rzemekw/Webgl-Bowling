@@ -1,6 +1,6 @@
 import Camera from './camera.js'
 import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp } from './consts/cameraConsts.js';
-import { ambientLight, sunLightDirection, sunLightIntesity } from './consts/lightConsts.js';
+import { ambientLight} from './consts/lightConsts.js';
 import ShaderProgramRepository from './repository/shaderProgramRepository.js';
 
 export default class WebglScene {
@@ -14,6 +14,7 @@ export default class WebglScene {
         result.models = scene.models;
         result.mirrors = [...scene.mirrors];
         result.reflectors = scene.reflectors;
+        result.sun = scene.sun;
 
         return result;
     }
@@ -44,6 +45,7 @@ export default class WebglScene {
     reflectors = [];
 
     mode = 'PHONG'
+    sun = null;
 
     async loadPrograms() {
         const [phong, staticp, mirror] = await Promise.all([
@@ -128,8 +130,14 @@ export default class WebglScene {
 
     _bindLight() {
         this.gl.uniform3f(this.currentProgram.uniforms.ambientUniformLocation, ...ambientLight);
-        this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, ...sunLightDirection);
-        this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, ...sunLightIntesity);
+        if (this.sun) {
+            this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, ...this.sun.direction);
+            this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, ...this.sun.intensity);
+        }
+        else {
+            this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, 1, 1, 1);
+            this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, 0, 0, 0);
+        }
         this.gl.uniform3f(this.currentProgram.uniforms.cameraPositionLocation, ...this.camera.position);
         this.gl.uniform1i(this.currentProgram.uniforms.reflectorsNumLocation, this.reflectors.length);
 
@@ -165,8 +173,14 @@ export default class WebglScene {
         this.mirrors.forEach(m => {
             m.updateTexture();
         });
+        if(this.sun === null) {
+            this.gl.clearColor(0.75, 0.85, 0.8, 1.0);
+        }
+        else {
+            this.gl.clearColor(0.75 * this.sun.intensity[0], 0.85 * this.sun.intensity[1], 0.8 * this.sun.intensity[2], 1.0);
+        }
 
-        this.gl.clearColor(0.75, 0.85, 0.8, 1.0);
+
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.CULL_FACE);

@@ -7,6 +7,8 @@ import MirrorModel from './mirrorModel.js';
 import { camera2Position, cameraInitialLookAt, cameraInitialPosition } from './consts/cameraConsts.js';
 import Reflector from './reflector'
 import ModelRepository from './repository/modelRepository.js';
+import Sun from './sun.js';
+import { sunLightDirection, sunLightMaxIntesity, sunLightMinIntesity } from './consts/lightConsts.js';
 
 export default class Game {
     constructor(canvas) {
@@ -32,6 +34,9 @@ export default class Game {
 
             this.scene.loadModels([...bowlingHallModels, ...bowlingPinModels, bowlingBallModel, ...reflectorModels]);
             await this.scene.loadPrograms();
+
+            this.scene.sun = new Sun(sunLightDirection, sunLightMaxIntesity, sunLightMinIntesity, this.scene);
+            this.scene.sun.startDayChanging(0.0001);
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
                 false, this.scene);
