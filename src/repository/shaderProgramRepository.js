@@ -45,8 +45,10 @@ export default class ShaderProgramRepository {
             materialKd: gl.getUniformLocation(program, 'material.kd'),
             materialShininess: gl.getUniformLocation(program, 'material.shininess'),
             cameraPositionLocation: gl.getUniformLocation(program, 'cameraPosition'),
-            reflectorsNumLocation: gl.getUniformLocation(program, 'reflectorsNum'),
+            fogDensityLocation: gl.getUniformLocation(program, 'fogDensity'),
+            fogColorLocation: gl.getUniformLocation(program, 'fogColor'),
 
+            reflectorsNumLocation: gl.getUniformLocation(program, 'reflectorsNum'),
             reflectorsLocations: [...Array(maxReflectors).keys()].map(i => ({
                 focusLocation: gl.getUniformLocation(program, `reflectors[${i}].focus`),
                 worldLocation: gl.getUniformLocation(program, `reflectors[${i}].world`),
@@ -71,6 +73,10 @@ export default class ShaderProgramRepository {
             mProj: gl.getUniformLocation(program, 'mProj'),
             mView: gl.getUniformLocation(program, 'mView'),
             mWorld: gl.getUniformLocation(program, 'mWorld'),
+
+            cameraPositionLocation: gl.getUniformLocation(program, 'cameraPosition'),
+            fogDensityLocation: gl.getUniformLocation(program, 'fogDensity'),
+            fogColorLocation: gl.getUniformLocation(program, 'fogColor'),
         };
 
         program.attribs = {

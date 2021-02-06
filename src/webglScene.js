@@ -1,6 +1,7 @@
 import Camera from './camera.js'
 import { cameraFov, cameraInitialLookAt, cameraInitialPosition, cameraInitialUp } from './consts/cameraConsts.js';
 import { ambientLight} from './consts/lightConsts.js';
+import { sceneColor } from './consts/sceneConsts.js';
 import ShaderProgramRepository from './repository/shaderProgramRepository.js';
 
 export default class WebglScene {
@@ -46,6 +47,7 @@ export default class WebglScene {
 
     mode = 'PHONG'
     sun = null;
+    fog = null;
 
     async loadPrograms() {
         const [phong, staticp, mirror] = await Promise.all([
@@ -138,7 +140,6 @@ export default class WebglScene {
             this.gl.uniform3f(this.currentProgram.uniforms.sunlightDirUniformLocation, 1, 1, 1);
             this.gl.uniform3f(this.currentProgram.uniforms.sunlightIntUniformLocation, 0, 0, 0);
         }
-        this.gl.uniform3f(this.currentProgram.uniforms.cameraPositionLocation, ...this.camera.position);
         this.gl.uniform1i(this.currentProgram.uniforms.reflectorsNumLocation, this.reflectors.length);
 
         this.reflectors.forEach((r, i) => {
@@ -162,8 +163,17 @@ export default class WebglScene {
         }
     }
 
+    _bindFog() {
+        this.gl.uniform3f(this.currentProgram.uniforms.fogColorLocation, ...this.fog.color);
+        this.gl.uniform1f(this.currentProgram.uniforms.fogDensityLocation, this.fog.density);
+    }
+
     _bindInitial() {
+        this.gl.uniform3f(this.currentProgram.uniforms.cameraPositionLocation, ...this.camera.position);
         this._bindMatrices();
+        if(this.fog) {
+            this._bindFog();
+        }
         if (this.mode == 'PHONG') {
             this._bindLight();
         }
@@ -173,11 +183,22 @@ export default class WebglScene {
         this.mirrors.forEach(m => {
             m.updateTexture();
         });
+
         if(this.sun === null) {
-            this.gl.clearColor(0.75, 0.85, 0.8, 1.0);
+            if(this.fog === null) {
+                this.gl.clearColor(...sceneColor, 1.0);
+            }
+            else {
+                this.gl.clearColor(...this.fog.color, 1.0);
+            }
         }
         else {
-            this.gl.clearColor(0.75 * this.sun.intensity[0], 0.85 * this.sun.intensity[1], 0.8 * this.sun.intensity[2], 1.0);
+            if(this.fog === null) {
+                this.gl.clearColor(...sceneColor.map((c,i) => c * this.sun.intensity[i]), 1.0);
+            }
+            else {
+                this.gl.clearColor(...this.fog.color.map((c,i) => c * this.sun.intensity[i]), 1.0);
+            }
         }
 
 

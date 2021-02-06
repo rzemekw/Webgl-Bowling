@@ -9,6 +9,8 @@ import Reflector from './reflector'
 import ModelRepository from './repository/modelRepository.js';
 import Sun from './sun.js';
 import { sunLightDirection, sunLightMaxIntesity, sunLightMinIntesity } from './consts/lightConsts.js';
+import Fog from './fog.js';
+import { fogColor, fogIncrement } from './consts/sceneConsts.js';
 
 export default class Game {
     constructor(canvas) {
@@ -37,6 +39,7 @@ export default class Game {
 
             this.scene.sun = new Sun(sunLightDirection, sunLightMaxIntesity, sunLightMinIntesity, this.scene);
             this.scene.sun.startDayChanging(0.0001);
+            this.scene.fog = new Fog(fogColor);
 
             const mirrorModel = new MirrorModel(mirrorCorners[0], mirrorCorners[1], mirrorCorners[2], mirrorCorners[3],
                 false, this.scene);
@@ -165,6 +168,12 @@ export default class Game {
                 return;
             case "b":
                 this._startBowlingBallLookAt();
+                return;
+            case "ArrowLeft":
+                this.scene.fog.decrementDensity(fogIncrement);
+                return;
+            case "ArrowRight":
+                this.scene.fog.incrementDensity(fogIncrement);
                 return;
         }
     }
