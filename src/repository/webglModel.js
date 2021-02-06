@@ -8,7 +8,9 @@ export default class WebglModel {
             this.yRotationAngle = rotationAngles[1];
             this.zRotationAngle = rotationAngles[2];
         }
-        this.translationVector = translationVector;
+        if(translationVector) {
+            this.translationVector = [...translationVector];
+        }
         this.applyTransform();
     }
 

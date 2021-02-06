@@ -1,4 +1,5 @@
 import {
+    bowlingBallInitialTranslation,
     mirrorCorners,
 } from './consts/modelConsts.js'
 import WebglScene from './webglScene.js';
@@ -174,6 +175,10 @@ export default class Game {
                 return;
             case "ArrowRight":
                 this.scene.fog.incrementDensity(fogIncrement);
+                return;
+            case " ":
+                this.bowlingBall.stopMoving();
+                this.bowlingBall.changeTranslation(...bowlingBallInitialTranslation);
                 return;
         }
     }

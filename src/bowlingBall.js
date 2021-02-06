@@ -1,4 +1,5 @@
-import { bowlingBallRadius } from "./consts/modelConsts.js";
+import { bowlingBallRadius, floorZ } from "./consts/modelConsts.js";
+import { gravity } from "./consts/sceneConsts.js";
 
 export default class BowlingBall {
     constructor(model, scene) {
@@ -16,11 +17,14 @@ export default class BowlingBall {
         return [...this.model.translationVector];
     }
 
-    changeTranslation(x, y) {
+    changeTranslation(x, y, z) {
         const pos = this.model.translationVector;
 
         pos[0] = x;
         pos[1] = y;
+        if(z !== undefined) {
+            pos[2] = z;
+        }
         this.model.applyTransform();
     }
 
@@ -71,9 +75,16 @@ export default class BowlingBall {
 
         pos[0] += this.vx * interval;
         pos[1] += this.vy * interval;
-        pos[2] += this.vz * interval;
 
-        // this.model.xRotationAngle += 0.03
+        this.vz -= gravity * interval;
+
+        pos[2] += this.vz * interval;
+        if(pos[2] <= floorZ) {
+            pos[2] = floorZ;
+            this.vz = 0;
+        }
+        
+
         this.model.xRotationAngle -= Math.sqrt(this.vy*this.vy + this.vx * this.vx) * interval / bowlingBallRadius;
         if (this.vy != 0) {
             this.model.zRotationAngle = -Math.atan(this.vx / this.vy);

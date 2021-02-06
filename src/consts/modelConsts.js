@@ -44,7 +44,7 @@ export const bowlingHallMaterials = [
     }
 ]
 
-export const floorZ = -0.868;
+export const floorZ = -0.8115;
 
 export const bowlingBallModelPath = bowlingBall
 export const bowlingBallTexturePath = bowlingBallImg
